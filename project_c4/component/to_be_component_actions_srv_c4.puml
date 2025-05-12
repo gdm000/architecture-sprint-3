@@ -1,0 +1,33 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+Container_Boundary(ActionsService, "Actions Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Handles device actions manipulations")
+  ContainerDb(actions_db, "Database", "PostgreSQL", "Содержит информацию о сценариях и настройках модуля управления")
+}
+
+Container(devices_communication_pull_srv, "Pull Communication Service", "Java", "Взаимодействие с устройствами умного дома")
+Container(monitoring_metric_srv, "Monitoring Service", "Java", "Мониторинг на основе метрик")
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(AuthController, "AuthController", "Handles authentication and authorization")
+  Component(ActionsController, "ActionsController", "Manages controller actions")
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(DeviceCommunicationLayer, "Device Communication Layer", "Manages controller actions")
+  Component(MonitoringCommunicationLayer, "Monitoring Communication Layer", "Manages and fetches notifications")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Rel(AuthController,ActionsController,"Calls business logic")
+Rel(ActionsController,ServiceLayer,"Calls business logic")
+Rel(ServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(ServiceLayer,DeviceCommunicationLayer,"Reads/Writes data")
+Rel(ServiceLayer,MonitoringCommunicationLayer,"Manages and fetches notifications")
+Rel(DeviceCommunicationLayer,devices_communication_pull_srv,"Manages device config")
+Rel(MonitoringCommunicationLayer,monitoring_metric_srv,"Manages and fetches notifications")
+Rel(RepositoryLayer,actions_db,"Reads/Writes data")
+@enduml

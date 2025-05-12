@@ -1,0 +1,29 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+Container_Boundary(AccountsService, "Accounts Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Handles user interactions")
+  ContainerDb(accounts_db, "Database", "PostgreSQL", "Содержит всю информацию о пользователях и домах")
+}
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(AuthController, "AuthController", "Handles authentication and authorization")
+  Component(AccountController, "UserController", "Manages user profiles")
+  Component(HouseController, "HouseController", "Manages user houses")
+  Component(AccountServiceLayer, "Account Service Layer", "Business logic")
+  Component(HouseServiceLayer, "House Service Layer", "Business logic")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Rel(AuthController,AccountController,"Calls business logic")
+Rel(AuthController,HouseController,"Calls business logic")
+Rel(AccountController,AccountServiceLayer,"Calls business logic")
+Rel(HouseController,HouseServiceLayer,"Calls business logic")
+Rel(AccountServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(HouseServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(RepositoryLayer,accounts_db,"Reads/Writes data")
+@enduml

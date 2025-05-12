@@ -1,0 +1,33 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+  Container(sensor2, "Датчик", "Hardware", "Отправляет данные сам", $sprite="robot")
+
+Container_Boundary(PushCommunicationService, "Push Communication Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Receives, collects and sends device metrics")
+}
+
+Container(metrics_collector_push_srv, "Metrics collector PUSH Service", "Java", "Получение метрик с устройств по\n стандартам push модели"){
+        }
+
+
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(AuthController, "AuthController", "Handles sensor api authentication")
+  Component(AccountController, "MetricController", "Accepts device metrics")
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(MetricCache, MetricCache, "Temp metric storage")
+  Component(MetricSender, "MetricSender", "Sending received metric")
+}
+
+Rel(sensor2,AuthController,"Push metric")
+Rel(AuthController,AccountController,"Calls business logic")
+Rel(AccountController,ServiceLayer,"Calls business logic")
+Rel(ServiceLayer,MetricCache,"Caches metric")
+Rel(MetricCache,MetricSender,"Sends metric")
+Rel(MetricSender,metrics_collector_push_srv,"Sends metric")
+@enduml

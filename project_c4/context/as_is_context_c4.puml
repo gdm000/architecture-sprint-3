@@ -1,0 +1,31 @@
+@startuml
+!include ../../C4/C4_Container.puml
+'!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+'skinparam linetype ortho
+'!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+'!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+'!include DEVICONS/angular.puml
+'!include DEVICONS/java.puml
+'!include DEVICONS/msql_server.puml
+'!include FONTAWESOME/users.puml
+
+'LAYOUT_WITH_LEGEND()
+
+Person(user, "Пользователь", "Пользователь системы умного дома")
+Person(admin, "Администратор", "Администратор, подключающий устройства пользователя и настраивающий систему")
+
+System_Boundary(system, "Теплый дом") {
+    System(HomeAssistantSystem, "HomeAssistantSystem", "Система управления датчиками и реле умного дома")
+    ContainerDb(db, "Database", "PostgreSQL", "Содержит всю информацию о пользователях")
+}
+Container(sensor, "Датчик", "Hardware", "Предоставляет актуальные данные по запросу", $sprite="robot")
+Container(controller, "Реле", "Hardware", "Предоставляет актуальные данные по запросу, получает команды управления", $sprite="robot2")
+
+Rel_D(user, HomeAssistantSystem, "Uses the system")
+Rel_D(admin,HomeAssistantSystem,"Manages the system")
+Rel(HomeAssistantSystem,sensor,"Fetches sensor data")
+Rel(HomeAssistantSystem,controller,"Manages the module")
+Rel_R(HomeAssistantSystem,db,"Read/Write data")
+
+@enduml

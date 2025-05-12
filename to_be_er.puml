@@ -1,0 +1,117 @@
+ @startuml
+' avoid problems with angled crows feet
+'skinparam linetype ortho
+
+entity Account {
+    * account_id
+    --
+    * enabled
+    * account_type
+    description
+}
+entity User {
+    * account_id
+    --
+    * alias
+    * email
+    * phone
+    * first_name
+    * second_name
+}
+entity Admin {
+    * account_id
+    --
+    * employee_id
+}
+entity House {
+    * house_id
+    --
+    * account_id
+    * address
+}
+entity Device {
+    * device_id
+    --
+    * house_id
+    * serial_number
+    * device_type_id
+    * status
+    * supported_apis
+    description
+}
+entity ControlModule {
+    * device_id
+    --
+    * action_id
+    * supported_action_types
+}
+entity SensorModule {
+    * device_id
+    --
+    * action_id
+    * supported_metric_types
+}
+entity Action {
+    * action_id
+    --
+    * action_type_id
+    * active
+    * action_config_id
+    description
+}
+entity ActionType {
+    * action_type_id
+    --
+    * name
+}
+entity MetricType {
+    * metric_type_id
+    --
+    * name
+}
+entity ActionConfig {
+    * action_config_id
+    --
+    * name
+    action_script_id
+    description
+}
+entity ActionScript {
+    * action_script_id
+    --
+    * name
+    * script
+    description
+}
+entity DeviceType {
+    * device_type_id
+    --
+    * name
+}
+
+entity Metrics {
+    * device_id
+    * metric_type_id
+    * metric_timestamp
+    --
+    * metric_value
+}
+
+ Account ||--||User : Аккаунт может быть пользовательским
+ Account ||--||Admin : Аккаунт может быть администрирующим
+ User ||--o{ House : один пользователь может иметь доступ\n к нескольким домам, но каждый дом\n связан только с одним пользователем.
+ House ||--o{ Device : один дом может содержать несколько\n устройств, и каждое устройство\n принадлежит только одному дому.
+ 'ControlModule is device
+ ControlModule ||--o{ Device : один модуль управления может\n контролировать несколько устройств
+ DeviceType ||--o{ Device : устройство может быть только одного типа,\n устройств одного типа может быть много
+ Device ||--|| SensorModule : для каждого устройства-датчика\n есть только одна запись устройства\n и датчика
+ Device ||--|| ControlModule : для каждого устройства-реле есть\n только одна запись устройства и реле
+ Device ||--o{ Metrics : одно устройство может генерировать\n множество записей телеметрии
+ ControlModule ||--o{ Action : одному модулю управления соответствует\n несколько возможных настроенных действий
+ Action ||--o{ ActionConfig : у каждого действия есть список конфигураций\n (история изменений конфигурации модуля)
+ ActionConfig ||--o| ActionScript : если действие (скрипт) выполняется на\n стороне системы, а не контроллера,\n к нему привязан только один скрипт.
+ Action }o--|| ActionType : действие может быть определенного типа,\n может быть много действий одного типа
+ ControlModule }o--o{ ActionType : модуль управления может поддерживать\n действия разных типов
+ SensorModule }o--|| MetricType : датчик может поддерживать телеметрии разных типов
+ Metrics }o--|| MetricType : запись телеметрии может быть только одного типа
+ @enduml

@@ -1,0 +1,29 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+Container_Boundary(DeviceControlService, "Device Control Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Handles device info manipulations")
+  ContainerDb(device_db, "Database", "PostgreSQL", "Содержит информацию о подключенных устройствах")
+}
+
+Container(devices_communication_pull_srv, "Pull Communication Service", "Java", "Взаимодействие с устройствами умного дома")
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(AuthController, "AuthController", "Handles authentication and authorization")
+  Component(DeviceController, "DeviceController", "Manages user devices")
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(DeviceCommunicationLayer, "Device Communication Layer", "Manages device config")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Rel(AuthController,DeviceController,"Calls business logic")
+Rel(DeviceController,ServiceLayer,"Calls business logic")
+Rel(ServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(ServiceLayer,DeviceCommunicationLayer,"Reads/Writes data")
+Rel(DeviceCommunicationLayer,devices_communication_pull_srv,"Manages device config")
+Rel(RepositoryLayer,device_db,"Reads/Writes data")
+@enduml
