@@ -1,0 +1,24 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+Container_Boundary(MetricsCollectorPushService, "Metrics Collector Push Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Получение метрик с устройств по\n стандартам push модели")
+}
+
+Container(devices_communication_push_srv, "Push Communication Service", "Java", "Взаимодействие с устройствами умного дома")
+Container(metrics_queue, "Metrics Queue", "Kafka", "Очередь, принимающая данные с датчиков для дальнейшей обработки")
+
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(MetricPushController, "MetricPushController", "Handles metric push requests")
+  Component(MetricPublisher, "MetricPublisher", "Publishes metric")
+}
+
+Rel(devices_communication_push_srv,MetricPushController,"Metric push request")
+Rel(MetricPushController,MetricPublisher,"Publishes metric")
+Rel(MetricPublisher,metrics_queue,"Publishes metric")
+@enduml

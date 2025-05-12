@@ -1,0 +1,102 @@
+@startuml
+!include ../../C4/C4_Container.puml
+'!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+skinparam linetype ortho
+
+Boundary(persons, "Users & Admins") {
+            Person(user, "Пользователь", "Пользователь системы умного дома")
+            Person(admin, "Администратор", "Администратор, использует каналы коммуникации, аналогичные пользователю, но обладает расширенными правами")
+}
+System_Boundary(system, "Теплый дом") {
+    Container(gateway, "Gateway", "Java", "Гейтвей для обращений к системе")
+
+    System_Boundary(metrics_mon_sdomain, "Subdomain: Metrics & Monitoring") {
+        Container(monitoring_metric_srv, "Monitoring Service", "Java", "Мониторинг на основе метрик") {
+            Boundary(monitoring_ctx, "Monitoring", "Context", "Мониторинг на основе метрик")
+            Boundary(metrics_ctx, "Metrics controller", "Context", "Управление метриками")
+
+        }
+        ContainerDb(monitoring_db, "Database", "PostgreSQL", "Содержит всю информацию об оповещениях и настройках мониторинга")
+        ContainerDb(prometheus_db, "TimeSeriesDB", "Prometheus", "Собирает и отдает метрики")
+        Rel(monitoring_metric_srv,monitoring_db,"Read\Write data")
+        Rel(monitoring_metric_srv,prometheus_db,"Получение метрик")
+
+        Container(metrics_collector_pull_srv, "Metrics collector PULL Service", "Java", "Получение метрик с устройств по\n стандартам pull модели"){
+            Boundary(metrics_collector_pull_ctx, "Metrics collector PULL", "Context", "Сбор метрик")
+        }
+
+       Container(metrics_collector_push_srv, "Metrics collector PUSH Service", "Java", "Получение метрик с устройств по\n стандартам push модели"){
+            Boundary(metrics_collector_push_ctx, "Metrics collector PUSH", "Context", "Сбор метрик")
+       }
+
+        Container(metrics_queue, "Metrics Queue", "Kafka", "Очередь, принимающая данные с датчиков для дальнейшей обработки")
+        Container(metrics_queue_exporter, "Metrics Exporter", "Java", "Экспортер метрик из очереди в TimeSeriesDB")
+        Rel(metrics_queue_exporter,prometheus_db,"Экспорт метрик")
+        Rel(metrics_queue_exporter,metrics_queue,"Получение метрик")
+        Rel(metrics_collector_pull_srv,metrics_queue, "Запись метрик")
+        Rel(metrics_collector_push_srv,metrics_queue, "Запись метрик")
+
+    }
+
+    System_Boundary(devices_sdomain, "Subdomain: Devices") {
+            Container(devices_communication_pull_srv, "Pull Communication Service", "Java", "Взаимодействие с устройствами умного дома") {
+                Boundary(devices_communication_pull_ctx, "Communication PULL", "Context", "Взаимодействие с устройствами умного дома")
+            }
+            Container(devices_communication_push_srv, "Push Communication Service", "Java", "Взаимодействие с устройствами умного дома") {
+                Boundary(devices_communication_push_ctx, "Communication PUSH", "Context", "Взаимодействие с устройствами умного дома")
+            }
+            together {
+            Container(devices_controller_srv, "Device Controller Service", "Java", "Настройка и управление устройствами умного дома") {
+                Boundary(devices_controller_ctx, "Controller", "Context", "Настройка и управление устройствами умного дома")
+            }
+            ContainerDb(devices_db, "Database", "PostgreSQL", "Содержит информацию о подключенных устройствах")
+            }
+            Rel(devices_controller_srv,devices_db, "Запись/чтение данных")
+            Rel(devices_controller_srv,devices_communication_pull_srv, "Настройка модуля управления")
+            together {
+            Container(devices_actions_srv, "Actions Service", "Java", "Действия и сценарии управления устройствами умного дома") {
+                Boundary(devices_actions_ctx, "Actions", "Context", "Действия и сценарии управления устройствами умного дома")
+            }
+            ContainerDb(actions_db, "Database", "PostgreSQL", "Содержит информацию о сценариях и настройках модуля управления")
+            Rel(devices_actions_srv,actions_db,"Manages the module")
+            }
+
+    }
+
+    Rel(metrics_collector_pull_srv,devices_communication_pull_srv,"Fetch sensor data")
+    Rel(devices_communication_push_srv,metrics_collector_push_srv,"Send sensor data")
+    Rel(devices_actions_srv,devices_communication_pull_srv,"Read\Write data")
+    Rel(devices_actions_srv,monitoring_metric_srv,"Получение метрик и событий")
+
+    System_Boundary(accounts_sdomain, "Subdomain: Accounts") {
+                Container(accounts_srv, "Accounts Service", "Java", "Управление пользователями и домами") {
+                    Boundary(accounts_controller_ctx, "Accounts Controller", "Context", "Настройка и управление учетными записями")
+                    Boundary(houses_controller_ctx, "Houses Controller", "Context", "Настройка и управление домами пользователей")
+                }
+                ContainerDb(accounts_db, "Database", "PostgreSQL", "Содержит всю информацию о пользователях и домах")
+     }
+}
+
+together {
+Container(controller, "Реле", "Hardware", "Предоставляет актуальные данные по запросу, получает команды управления", $sprite="robot2")
+Container(sensor, "Датчик", "Hardware", "Предоставляет данные по запросу", $sprite="robot")
+Container(sensor2, "Датчик", "Hardware", "Отправляет данные сам", $sprite="robot")
+}
+
+
+Rel(persons, gateway, "запросы к системе")
+
+Rel(gateway, houses_controller_ctx, "управление домом")
+Rel(gateway, accounts_controller_ctx, "управление учетными данными")
+Rel(gateway, devices_controller_srv, "добавление/удаление устройств")
+Rel(gateway, devices_actions_srv, "работа с модулем управления")
+Rel(gateway, metrics_ctx, "просмотр метрик устройств")
+Rel(gateway, monitoring_ctx, "настройка мониторинга метрик устройств")
+Rel(devices_communication_pull_srv,sensor,"Fetch sensor data")
+Rel(sensor2,devices_communication_push_srv,"Send sensor data")
+Rel(devices_communication_pull_srv,controller,"Manages the module")
+
+Rel(accounts_srv,accounts_db,"Read\Write data")
+
+@enduml

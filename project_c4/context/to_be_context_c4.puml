@@ -1,0 +1,54 @@
+@startuml
+!include ../../C4/C4_Container.puml
+'!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+skinparam linetype ortho
+'!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+'!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+'!include DEVICONS/angular.puml
+'!include DEVICONS/java.puml
+'!include DEVICONS/msql_server.puml
+'!include FONTAWESOME/users.puml
+
+'LAYOUT_WITH_LEGEND()
+
+'Person(user, "Пользователь", "Пользователь системы умного дома")
+'Person(admin, "Администратор", "Администратор, подключающий устройства пользователя и настраивающий систему")
+
+top to bottom direction
+Boundary(persons, "Users & Admins") {
+            Person(user, "Пользователь", "Пользователь системы умного дома")
+            Person(admin, "Администратор", "Администратор, использует каналы коммуникации, аналогичные пользователю, но обладает расширенными правами")
+}
+System_Boundary(system, "Теплый дом") {
+
+    System_Boundary(metrics_mon_sdomain, "Subdomain: Metrics & Monitoring") {
+        Container(monitoring_ctx, "Monitoring", "Context", "Мониторинг на основе метрик")
+        Container(metrics_ctx, "Metrics controller", "Context", "Управление метриками")
+        Container(metrics_collector_ctx, "Metrics collector", "Context", "Сбор метрик")
+    }
+
+    System_Boundary(devices_sdomain, "Subdomain: Devices") {
+            Container(devices_communication_ctx, "Communication", "Context", "Взаимодействие с устройствами умного дома")
+            Container(devices_controller_ctx, "Controller", "Context", "Настройка и управление устройствами умного дома")
+            Container(devices_actions_ctx, "Actions", "Context", "Действия и сценарии управления устройствами умного дома")
+    }
+
+    System_Boundary(accounts_sdomain, "Subdomain: Accounts") {
+                Container(accounts_controller_ctx, "Accounts Controller", "Context", "Настройка и управление учетными записями")
+                Container(houses_controller_ctx, "Houses Controller", "Context", "Настройка и управление домами пользователей")
+    }
+}
+Container(sensor, "Датчик", "Hardware", "Предоставляет актуальные данные по запросу либо отправляет сам", $sprite="robot")
+Container(controller, "Реле", "Hardware", "Предоставляет актуальные данные по запросу, получает команды управления", $sprite="robot2")
+
+Rel_D(persons, houses_controller_ctx, "управление домом")
+Rel_D(persons, accounts_controller_ctx, "управление учетными данными")
+Rel_D(persons, devices_controller_ctx, "добавление/удаление устройств")
+Rel_D(persons, devices_actions_ctx, "работа с модулем управления")
+Rel_D(persons, metrics_ctx, "просмотр метрик устройств")
+Rel_D(persons, monitoring_ctx, "настройка мониторинга метрик устройств")
+Rel(devices_communication_ctx,sensor,"Fetches sensor data")
+Rel(devices_communication_ctx,controller,"Manages the module")
+
+@enduml

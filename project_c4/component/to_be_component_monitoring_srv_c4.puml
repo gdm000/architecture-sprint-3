@@ -1,0 +1,33 @@
+@startuml
+title Warm Home System
+
+top to bottom direction
+
+!include ../../C4/C4_Component.puml
+
+Container_Boundary(MonitoringService, "Monitoring Service") {
+  Container(WebApp, "Web Application", "Java, Spring", "Handles interactions with monitoring")
+  ContainerDb(monitoring_db, "Database", "PostgreSQL", "Содержит всю информацию об оповещениях и настройках мониторинга")
+  ContainerDb(prometheus_db, "TimeSeriesDB", "Prometheus", "Собирает и отдает метрики")
+}
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(AuthController, "AuthController", "Handles authentication and authorization")
+  Component(MetricsController, "MetricsController", "Manages metrics requests")
+  Component(MonitoringController, "MonitoringController", "Manages monitoring requests")
+  Component(MetricsServiceLayer, "Metrics Service Layer", "Business logic")
+  Component(MonitoringServiceLayer, "Monitoring Service Layer", "Business logic")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+  Component(MetricsDBLayer, "TimeSeriesDB Layer", "Data access logic")
+}
+
+Rel(AuthController,MetricsController,"Calls business logic")
+Rel(AuthController,MonitoringController,"Calls business logic")
+Rel(MetricsController,MetricsServiceLayer,"Calls business logic")
+Rel(MonitoringController,MonitoringServiceLayer,"Calls business logic")
+Rel(MonitoringServiceLayer,RepositoryLayer,"Reads/Writes data")
+Rel(MonitoringServiceLayer,MetricsDBLayer,"Reads/Writes data")
+Rel(MetricsServiceLayer,MetricsDBLayer,"Reads/Writes data")
+Rel(RepositoryLayer,monitoring_db,"Reads/Writes data")
+Rel(MetricsDBLayer,prometheus_db,"Reads/Writes data")
+@enduml
